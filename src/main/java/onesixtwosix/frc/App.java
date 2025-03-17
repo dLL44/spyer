@@ -96,7 +96,7 @@ class VideoPanel extends JPanel implements Runnable {
 
         if (regularImage != null && processedImage != null) {
             // Draw background
-            g2d.setColor(Color.BLACK);
+            g2d.setColor(Color.DARK_GRAY);
             g2d.fillRect(0, 0, 1400, 700);
 
 
@@ -116,9 +116,9 @@ class VideoPanel extends JPanel implements Runnable {
 
             // Draw OCR
             g2d.setColor(Color.WHITE);
-            g2d.fillRect(730, 640, 500, 30); // White background for text
+            g2d.fillRect(0, 640, 500, 30); // White background for text
             g2d.setColor(Color.BLACK);
-            g2d.drawString("OCR: " + res, 740, 660);
+            g2d.drawString("OCR: " + res, 10, 660);
 
         }
     }
@@ -209,6 +209,8 @@ class VideoPanel extends JPanel implements Runnable {
                     res = "ocr err (null image)";
                 } else {
                     res = tess.doOCR(textImage);
+                    // Filter non-team numbers
+                    res = res.replaceAll("[^0-9]", "");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
