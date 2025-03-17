@@ -20,7 +20,9 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
+import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.*;
+import net.sourceforge.tess4j.util.*;
 
 public class App {
     public static void main(String[] args) {
@@ -196,7 +198,7 @@ class VideoPanel extends JPanel implements Runnable {
             Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
             try {
-                BufferedImage textImage = Functions.Mat2BufferedImage(thresh);
+                BufferedImage textImage = Functions.Mat2BufferedImage(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
                 res = tess.doOCR(textImage);
                 
             } catch (Exception e) {
