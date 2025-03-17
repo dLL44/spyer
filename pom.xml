@@ -38,6 +38,13 @@
     <artifactId>tess4j</artifactId>
     <version>5.15.0</version>
 </dependency>
+<!-- https://mvnrepository.com/artifact/net.sourceforge.lept4j/lept4j -->
+<dependency>
+    <groupId>net.sourceforge.lept4j</groupId>
+    <artifactId>lept4j</artifactId>
+    <version>1.21.0</version>
+</dependency>
+
 
   </dependencies>
 

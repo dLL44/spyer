@@ -118,10 +118,10 @@ class VideoPanel extends JPanel implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void run() throws ArrayIndexOutOfBoundsException {
         ITesseract tess = new Tesseract();
         tess.setLanguage("eng");
-        tess.setDatapath("/home/rub/geekd/spyer/tesseractdata");
+        tess.setDatapath("/usr/share/tesseract-ocr/5/tessdata");
         Mat frame = new Mat();
         while (true) {
             capture.read(frame);
@@ -198,9 +198,12 @@ class VideoPanel extends JPanel implements Runnable {
             Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
             try {
-                BufferedImage textImage = Functions.Mat2BufferedImage(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
-                res = tess.doOCR(textImage);
-                
+                BufferedImage textImage = Functions.Mat2BufferedImage2(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
+                if (textImage == null) {
+                    res = "ocr err (null image)";
+                } else {
+                    res = tess.doOCR(textImage);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 res = "ocr err";

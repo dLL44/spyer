@@ -57,4 +57,37 @@ public class Functions {
         image.getRaster().setDataElements(0, 0, width, height, data);
         return image;
     }
+
+    public static BufferedImage Mat2BufferedImage2(Mat mat) {
+        int width = mat.width();
+        int height = mat.height();
+        int channels = mat.channels();
+        int bufferSize = width * height * channels;
+    
+        byte[] data = new byte[bufferSize];
+        mat.get(0, 0, data);
+    
+        BufferedImage image;
+    
+        if (channels == 1) {  // Grayscale
+            image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+            image.getRaster().setDataElements(0, 0, width, height, data);
+        } else if (channels == 3) {  // BGR
+            image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+            final byte[] bgrData = new byte[width * height * 3];
+    
+            // Convert OpenCV's BGR to BufferedImage's BGR layout
+            for (int i = 0; i < width * height; i++) {
+                bgrData[i * 3] = data[i * 3 + 2];     // Blue
+                bgrData[i * 3 + 1] = data[i * 3 + 1]; // Green
+                bgrData[i * 3 + 2] = data[i * 3];     // Red
+            }
+            image.getRaster().setDataElements(0, 0, width, height, bgrData);
+        } else {
+            throw new IllegalArgumentException("Unsupported channel count: " + channels);
+        }
+    
+        return image;
+    }
+    
 }
