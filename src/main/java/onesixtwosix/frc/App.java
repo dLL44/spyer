@@ -5,7 +5,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 // import java.util.concurrent.ExecutionException;
@@ -247,13 +249,28 @@ class VideoPanel extends JPanel implements Runnable {
                     res = "ocr err (null image)";
                 } else {
                     res = tess.doOCR(textImage);
-                    // Filter non-team numbers
+                    // Filter and get numbers
                     res = res.replaceAll("[^0-9]", "");
+                    
+                    if (!res.isEmpty()) {
+                        int resInt = Integer.parseInt(res);
+                        int[] res25 = new int[10];
+
+                        for (int i=0;i>10;i++) {
+                            res25[i] = resInt;
+                        }
+
+                        System.out.println(Arrays.toString(res25));
+                    } else {
+                        System.err.println("no valid numbers found");
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 res = "ocr err";
             }
+
+
     
             // Update images for rendering
             regularImage = Functions.Mat2BufferedImage(regRGB);
@@ -264,7 +281,7 @@ class VideoPanel extends JPanel implements Runnable {
     
             // Delay to control frame rate
             try {
-                Thread.sleep(15); // around 40-50 FPS
+                Thread.sleep(10); // around 40-50 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

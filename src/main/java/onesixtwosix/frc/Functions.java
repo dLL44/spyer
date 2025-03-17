@@ -12,7 +12,12 @@ import java.util.Map;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.imgcodecs.Imgcodecs; // For reading images
+import org.opencv.imgproc.Imgproc;
 
 public class Functions {
     /**
@@ -89,5 +94,56 @@ public class Functions {
     
         return image;
     }
-    
+ 
+    public class Testing {
+        public void testWithImage(String imagePath) {
+            // Load the test image
+            Mat frame = Imgcodecs.imread(imagePath);
+            if (frame.empty()) {
+                System.out.println("Error: Could not load image.");
+                return;
+            }
+        
+            // Convert to HSV color space
+            Mat hsv = new Mat();
+            Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
+        
+            // Define HSV ranges for red and blue
+            Scalar lowerRed = new Scalar(0, 100, 100);
+            Scalar upperRed = new Scalar(10, 255, 255);
+            Scalar lowerBlue = new Scalar(100, 100, 100);
+            Scalar upperBlue = new Scalar(140, 255, 255);
+        
+            // Create masks
+            Mat maskRed = new Mat();
+            Mat maskBlue = new Mat();
+            Core.inRange(hsv, lowerRed, upperRed, maskRed);
+            Core.inRange(hsv, lowerBlue, upperBlue, maskBlue);
+        
+            // Find contours
+            List<MatOfPoint> contoursRed = new ArrayList<>();
+            List<MatOfPoint> contoursBlue = new ArrayList<>();
+            Imgproc.findContours(maskRed, contoursRed, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            Imgproc.findContours(maskBlue, contoursBlue, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        
+            // Draw bounding rectangles instead of contours
+            for (MatOfPoint contour : contoursRed) {
+                if (Imgproc.contourArea(contour) > 500) { // Ignore small areas (noise)
+                    Rect rect = Imgproc.boundingRect(contour);
+                    Imgproc.rectangle(frame, rect, new Scalar(0, 0, 255), 3); // Red box
+                }
+            }
+        
+            for (MatOfPoint contour : contoursBlue) {
+                if (Imgproc.contourArea(contour) > 500) {
+                    Rect rect = Imgproc.boundingRect(contour);
+                    Imgproc.rectangle(frame, rect, new Scalar(255, 0, 0), 3); // Blue box
+                }
+            }
+        
+            // Save or display the output image
+            Imgcodecs.imwrite("output.jpg", frame);
+            System.out.println("Processed image saved as output.jpg");
+        }
+    }
 }
