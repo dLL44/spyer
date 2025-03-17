@@ -189,9 +189,9 @@ class VideoPanel extends JPanel implements Runnable {
             Mat grey = new Mat();
             Imgproc.cvtColor(frame, grey, Imgproc.COLOR_BGR2GRAY);
             Mat thresh = new Mat();
-            Imgproc.threshold(grey, thresh, 150, 255, Imgproc.THRESH_BINARY_INV);
+            Imgproc.threshold(grey, thresh, 150, 255, BufferedImage.TYPE_BYTE_GRAY);
 
-            List<MatOfPoint> contours = new ArrayList<>();
+            List<MatOfPoint> contours = new ArrayList<>();  
             Mat hierarchy = new Mat();
             Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
