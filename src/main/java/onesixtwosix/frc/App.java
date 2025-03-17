@@ -67,6 +67,7 @@ public class App {
         mainFrame.setSize(1400, 700);
         mainFrame.setResizable(false);
         mainFrame.setAlwaysOnTop(false);
+        mainFrame.setBackground(Color.DARK_GRAY);
         
         VideoPanel videoPanel = new VideoPanel(capture);
         mainFrame.add(videoPanel);
@@ -94,6 +95,11 @@ class VideoPanel extends JPanel implements Runnable {
         Graphics2D g2d = (Graphics2D) g;
 
         if (regularImage != null && processedImage != null) {
+            // Draw background
+            g2d.setColor(Color.BLACK);
+            g2d.fillRect(0, 0, 1400, 700);
+
+
             // Draw regular feed
             g2d.drawImage(regularImage, 0, 0, 640, 640, this);
             g2d.setColor(Color.WHITE);
