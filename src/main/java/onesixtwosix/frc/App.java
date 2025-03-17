@@ -221,7 +221,7 @@ class VideoPanel extends JPanel implements Runnable {
 
             // Delay to control frame rate
             try {
-                Thread.sleep(33); // ~30 FPS
+                Thread.sleep(15); // around 10-18 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
