@@ -124,7 +124,7 @@ class VideoPanel extends JPanel implements Runnable {
     }
 
     @Override
-    public void run() throws ArrayIndexOutOfBoundsException {
+    public void run() {
         ITesseract tess = new Tesseract();
         tess.setLanguage("eng");
         tess.setDatapath("/usr/share/tesseract-ocr/5/tessdata");
@@ -135,21 +135,21 @@ class VideoPanel extends JPanel implements Runnable {
                 System.err.println("Frame capture failed (frame is empty)");
                 break;
             }
-
+    
             // Convert frame to RGB
             Mat regRGB = new Mat();
             Imgproc.cvtColor(frame, regRGB, Imgproc.COLOR_BGR2RGB);
-
+    
             // Convert to HSV for processing
             Mat hsv = new Mat();
             Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
-
+    
             // Red color range in HSV
             Scalar lowerRed1 = new Scalar(0, 120, 70);
             Scalar upperRed1 = new Scalar(10, 255, 255);
             Scalar lowerRed2 = new Scalar(170, 120, 70);
             Scalar upperRed2 = new Scalar(180, 255, 255);
-
+    
             // Blue color range in HSV
             Scalar lowerBlue = new Scalar(100, 150, 0);
             Scalar upperBlue = new Scalar(140, 255, 255);
@@ -157,76 +157,72 @@ class VideoPanel extends JPanel implements Runnable {
             Scalar upperBlue2 = new Scalar(110, 255, 255);
             Scalar lowerBlue3 = new Scalar(105, 100, 20);
             Scalar upperBlue3 = new Scalar(130, 255, 255);
-
-
+    
             // Create masks for red and blue colors
             Mat maskRed1 = new Mat();
             Mat maskRed2 = new Mat();
             Mat maskBlue = new Mat();
-            
+    
             Core.inRange(hsv, lowerRed1, upperRed1, maskRed1);
             Core.inRange(hsv, lowerRed2, upperRed2, maskRed2);
             Core.inRange(hsv, lowerBlue, upperBlue, maskBlue);
-
+    
             Mat maskBlue2 = new Mat();
             Mat maskBlue3 = new Mat();
-
+    
             Core.inRange(hsv, lowerBlue2, upperBlue2, maskBlue2);
             Core.inRange(hsv, lowerBlue3, upperBlue3, maskBlue3);
-
+    
             Mat finalBlueMask = new Mat();
             Core.add(maskBlue, maskBlue2, finalBlueMask);
             Core.add(finalBlueMask, maskBlue3, finalBlueMask);
-
+    
             Mat redMask = new Mat();
             Core.add(maskRed1, maskRed2, redMask);
-
+    
             // Find contours for red and blue
             List<MatOfPoint> contoursRed = new ArrayList<>();
             Mat hierarchyRed = new Mat();
             Imgproc.findContours(redMask, contoursRed, hierarchyRed, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
+    
             List<MatOfPoint> contoursBlue = new ArrayList<>();
             Mat hierarchyBlue = new Mat();
             Imgproc.findContours(finalBlueMask, contoursBlue, hierarchyBlue, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-            // Draw contours
+    
+            // Draw contours (outline of the robot)
             Imgproc.drawContours(frame, contoursRed, -1, new Scalar(0, 0, 255), 3); // Red contours in BGR
             Imgproc.drawContours(frame, contoursBlue, -1, new Scalar(255, 0, 0), 3); // Blue contours in BGR
-
-            Mat grey = new Mat();
-            Imgproc.cvtColor(frame, grey, Imgproc.COLOR_BGR2GRAY);
-            Mat thresh = new Mat();
-            Imgproc.threshold(grey, thresh, 150, 255, BufferedImage.TYPE_BYTE_GRAY);
-
-            List<MatOfPoint> contours = new ArrayList<>();  
-            Mat hierarchy = new Mat();
-            Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-            try {
-                BufferedImage textImage = Functions.Mat2BufferedImage2(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
-                if (textImage == null) {
-                    res = "ocr err (null image)";
-                } else {
-                    res = tess.doOCR(textImage);
-                    // Filter non-team numbers
-                    res = res.replaceAll("[^0-9]", "");
+    
+            // Filter out small contours (noise reduction)
+            List<MatOfPoint> filteredContoursRed = new ArrayList<>();
+            for (MatOfPoint contour : contoursRed) {
+                if (Imgproc.contourArea(contour) > 100) { // Minimum area threshold
+                    filteredContoursRed.add(contour);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                res = "ocr err";
             }
-
+    
+            List<MatOfPoint> filteredContoursBlue = new ArrayList<>();
+            for (MatOfPoint contour : contoursBlue) {
+                if (Imgproc.contourArea(contour) > 100) { // Minimum area threshold
+                    filteredContoursBlue.add(contour);
+                }
+            }
+    
+            // Draw filtered contours (outline of the robot)
+            Imgproc.drawContours(frame, filteredContoursRed, -1, new Scalar(0, 0, 255), 3); // Red contours in BGR
+            Imgproc.drawContours(frame, filteredContoursBlue, -1, new Scalar(255, 0, 0), 3); // Blue contours in BGR
+    
+            // Update processed image
             Mat processedFrame = new Mat();
             Imgproc.cvtColor(frame, processedFrame, Imgproc.COLOR_BGR2RGB);
-
+    
             // Update images for rendering
             regularImage = Functions.Mat2BufferedImage(regRGB);
             processedImage = Functions.Mat2BufferedImage(processedFrame);
-
+    
             // Repaint the panel
             repaint();
-
+    
             // Delay to control frame rate
             try {
                 Thread.sleep(15); // around 40-50 FPS
@@ -235,4 +231,5 @@ class VideoPanel extends JPanel implements Runnable {
             }
         }
     }
+        
 }
