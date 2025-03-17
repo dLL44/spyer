@@ -215,6 +215,20 @@ class VideoPanel extends JPanel implements Runnable {
             // Update processed image
             Mat processedFrame = new Mat();
             Imgproc.cvtColor(frame, processedFrame, Imgproc.COLOR_BGR2RGB);
+
+            try {
+                BufferedImage textImage = Functions.Mat2BufferedImage2(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
+                if (textImage == null) {
+                    res = "ocr err (null image)";
+                } else {
+                    res = tess.doOCR(textImage);
+                    // Filter non-team numbers
+                    res = res.replaceAll("[^0-9]", "");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                res = "ocr err";
+            }
     
             // Update images for rendering
             regularImage = Functions.Mat2BufferedImage(regRGB);
