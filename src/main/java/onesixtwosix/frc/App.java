@@ -212,6 +212,15 @@ class VideoPanel extends JPanel implements Runnable {
             Imgproc.drawContours(frame, filteredContoursRed, -1, new Scalar(0, 0, 255), 3); // Red contours in BGR
             Imgproc.drawContours(frame, filteredContoursBlue, -1, new Scalar(255, 0, 0), 3); // Blue contours in BGR
     
+            Mat grey = new Mat();
+            Imgproc.cvtColor(frame, grey, Imgproc.COLOR_BGR2GRAY);
+            Mat thresh = new Mat();
+            Imgproc.threshold(grey, thresh, 150, 255, BufferedImage.TYPE_BYTE_GRAY);
+
+            List<MatOfPoint> contours = new ArrayList<>();  
+            Mat hierarchy = new Mat();
+            Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
             // Update processed image
             Mat processedFrame = new Mat();
             Imgproc.cvtColor(frame, processedFrame, Imgproc.COLOR_BGR2RGB);
