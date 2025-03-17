@@ -1,9 +1,10 @@
 package onesixtwosix.frc;
 
-import java.awt.*;
+import java.awt.Image;
+// import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import javax.swing.*;
+// import javax.swing.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,7 +47,7 @@ public class Functions {
      * @param mat
      * @return a buffered image of provided mat
      */
-    public static Image Mat2BufferedImage(Mat mat) {
+    public static BufferedImage Mat2BufferedImage(Mat mat) {
         int width = mat.width();
         int height = mat.height();
         int channels = mat.channels();
