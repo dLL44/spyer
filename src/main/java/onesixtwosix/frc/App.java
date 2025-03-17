@@ -211,7 +211,22 @@ class VideoPanel extends JPanel implements Runnable {
             // Draw filtered contours (outline of the robot)
             Imgproc.drawContours(frame, filteredContoursRed, -1, new Scalar(0, 0, 255), 3); // Red contours in BGR
             Imgproc.drawContours(frame, filteredContoursBlue, -1, new Scalar(255, 0, 0), 3); // Blue contours in BGR
-    
+
+            for (MatOfPoint contour : contoursRed) {
+                if (Imgproc.contourArea(contour) > 500) { // Ignore small areas (noise)
+                    Rect rect = Imgproc.boundingRect(contour);
+                    Imgproc.rectangle(frame, rect, new Scalar(0, 0, 255), 3); // Red box
+                }
+            }
+            
+            for (MatOfPoint contour : contoursBlue) {
+                if (Imgproc.contourArea(contour) > 500) {
+                    Rect rect = Imgproc.boundingRect(contour);
+                    Imgproc.rectangle(frame, rect, new Scalar(255, 0, 0), 3); // Blue box
+                }
+            }
+            
+                
             Mat grey = new Mat();
             Imgproc.cvtColor(frame, grey, Imgproc.COLOR_BGR2GRAY);
             Mat thresh = new Mat();
