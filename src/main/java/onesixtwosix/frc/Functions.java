@@ -3,12 +3,14 @@ package onesixtwosix.frc;
 import java.awt.Image;
 // import java.awt.*;
 import java.awt.image.BufferedImage;
-
+import java.io.File;
 // import javax.swing.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -16,8 +18,19 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
+
+import com.sun.jna.Pointer;
+
+import net.sourceforge.tess4j.TessAPI;
+import net.sourceforge.tess4j.TessAPI1;
+import net.sourceforge.tess4j.Tesseract;
+
 import org.opencv.imgcodecs.Imgcodecs; // For reading images
 import org.opencv.imgproc.Imgproc;
+
+import net.sourceforge.lept4j.*;
+import net.sourceforge.lept4j.util.*;
+
 
 public class Functions {
     /**
@@ -26,7 +39,12 @@ public class Functions {
      */
     public static Map<String, String> retrieveLibraries() {
         Map<String, String> libraries = new LinkedHashMap<>();
+        String leptversion          = Leptonica1.getLeptonicaVersion().getString(0);
+        String leptimagelibversions = Leptonica1.getImagelibVersions().getString(0);
         libraries.put("opencv", Core.VERSION);
+        libraries.put("tess4j", TessAPI1.TessVersion());
+        libraries.put("lept4j", leptversion);
+        libraries.put("lept4j_imagelib", leptimagelibversions);
         return libraries;
     }    
 
@@ -93,6 +111,21 @@ public class Functions {
         }
     
         return image;
+    }
+
+    public static Image ReturnWaitImage(Image... img) {
+        File imageFile = new File("meetme.png");
+        try {
+            if (!imageFile.exists()) {
+                System.err.println("an essential resource cannot be found.");
+                return null;
+            }
+    
+            return ImageIO.read(imageFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
  
     public class Testing {

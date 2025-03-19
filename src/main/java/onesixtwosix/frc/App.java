@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.PopupMenu;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -11,9 +12,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 // import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.swing.Action;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -28,12 +36,15 @@ import net.sourceforge.tess4j.*;
 import net.sourceforge.tess4j.util.*;
 
 public class App {
+    // Declare globals
+    private static Scanner inputScanner = new Scanner(System.in);
+    private static VideoCapture capture = null;
+    // private static int cameraIndex = 0;
+    public static boolean changingCameras = false;
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-        // Declare globals
-        Scanner inputScanner = new Scanner(System.in);
-        Integer cameraIndex = 0;
+        int cameraIndex = 0;
 
         System.out.println("spyer\n---\nget cooking");
 
@@ -58,24 +69,56 @@ public class App {
         }
 
         // Create VideoCapture
-        VideoCapture capture = new VideoCapture(cameras.get(cameraIndex));
-        if (!capture.isOpened()) {
-            System.err.println("Frame capture failed. (capture not opened)");
-            return;
+        try {
+            capture = new VideoCapture(cameras.get(cameraIndex));
+            if (!capture.isOpened()) {
+                System.err.println("Frame capture failed. (capture not opened)");
+                return;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            System.err.println("No Cameras - check if your camera is on.");
+            System.err.println("Stack Trace:\n"+e);
         }
 
+
         // Create JFrame with a custom JPanel
+        // make menubar with settings: Change camera, show regular output, show OCR, etc
         JFrame mainFrame = new JFrame("spyer - camera feed");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setSize(1400, 700);
         mainFrame.setResizable(false);
         mainFrame.setAlwaysOnTop(false);
         mainFrame.setBackground(Color.DARK_GRAY);
+
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Settings");
+        menuBar.add(menu);
+        mainFrame.setJMenuBar(menuBar);
         
+        JMenuItem changeCI = new JMenuItem("Switch Cameras");
+        changeCI.addActionListener(e -> {
+            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
+            try {
+                int newIndex = Integer.parseInt(newIndexStr);
+                if (cameras.contains(newIndex)) {
+                    changingCameras = true;
+                    capture.release();
+                    capture.open(newIndex);
+                    changingCameras = false;
+                } else {
+                    JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        menu.add(changeCI);
+
+
         VideoPanel videoPanel = new VideoPanel(capture);
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
-
+        
         // Start video update loop
         new Thread(videoPanel).start();
     }
@@ -87,6 +130,7 @@ class VideoPanel extends JPanel implements Runnable {
     private Image processedImage;
     private Image regularImage;
     private String res;
+    private App app = new App();
 
     public VideoPanel(VideoCapture capture) {
         this.capture = capture;
@@ -98,30 +142,58 @@ class VideoPanel extends JPanel implements Runnable {
         Graphics2D g2d = (Graphics2D) g;
 
         if (regularImage != null && processedImage != null) {
-            // Draw background
-            g2d.setColor(Color.DARK_GRAY);
-            g2d.fillRect(0, 0, 1400, 700);
+            if (app.changingCameras == false) {
+                // Draw background
+                g2d.setColor(Color.DARK_GRAY);
+                g2d.fillRect(0, 0, 1400, 700);
 
 
-            // Draw regular feed
-            g2d.drawImage(regularImage, 0, 0, 640, 640, this);
-            g2d.setColor(Color.WHITE);
-            g2d.fillRect(0, 0, 140, 20);
-            g2d.setColor(Color.BLACK);
-            g2d.drawString("regular", 10, 15);
+                // Draw regular feed
+                g2d.drawImage(regularImage, 0, 0, 640, 640, this);
+                g2d.setColor(Color.WHITE);
+                g2d.fillRect(0, 0, 140, 20);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("regular", 10, 15);
 
-            // Draw processed feed
-            g2d.drawImage(processedImage, 730, 0, 640, 640, this);
-            g2d.setColor(Color.WHITE);
-            g2d.fillRect(730, 0, 180, 20);
-            g2d.setColor(Color.BLACK);
-            g2d.drawString("processed", 740, 15);
+                // Draw processed feed
+                g2d.drawImage(processedImage, 660, 0, 640, 640, this);
+                g2d.setColor(Color.WHITE);
+                g2d.fillRect(660, 0, 180, 20);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("processed", 670, 15);
 
-            // Draw OCR
-            g2d.setColor(Color.WHITE);
-            g2d.fillRect(0, 640, 500, 30); // White background for text
-            g2d.setColor(Color.BLACK);
-            g2d.drawString("OCR: " + res, 10, 660);
+                // Draw OCR
+                g2d.setColor(Color.WHITE);
+                g2d.fillRect(0, 620, 1400, 30); // White background for text
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("OCR: " + res, 10, 635);
+            } else {
+                Functions.ReturnWaitImage(regularImage, processedImage);
+                // Draw background
+                g2d.setColor(Color.DARK_GRAY);
+                g2d.fillRect(0, 0, 1400, 700);
+
+
+                // Draw regular feed
+                g2d.drawImage(regularImage, 0, 0, 640, 640, this);
+                g2d.setColor(Color.WHITE);
+                g2d.fillRect(0, 0, 140, 20);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("regular", 10, 15);
+
+                // Draw processed feed
+                g2d.drawImage(processedImage, 660, 0, 640, 640, this);
+                g2d.setColor(Color.WHITE);
+                g2d.fillRect(660, 0, 180, 20);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("processed", 670, 15);
+
+                // Draw OCR
+                g2d.setColor(Color.WHITE);
+                g2d.fillRect(0, 620, 1400, 30); // White background for text
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("OCR: " + res, 10, 635);
+            }
 
         }
     }
