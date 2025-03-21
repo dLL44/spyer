@@ -3,16 +3,34 @@ package onesixtwosix.frc;
 import java.awt.Image;
 // import java.awt.*;
 import java.awt.image.BufferedImage;
-
+import java.io.File;
 // import javax.swing.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
+
+import com.sun.jna.Pointer;
+
+import net.sourceforge.tess4j.TessAPI;
+import net.sourceforge.tess4j.TessAPI1;
+import net.sourceforge.tess4j.Tesseract;
+
+import org.opencv.imgcodecs.Imgcodecs; // For reading images
+import org.opencv.imgproc.Imgproc;
+
+import net.sourceforge.lept4j.*;
+import net.sourceforge.lept4j.util.*;
+
 
 public class Functions {
     /**
@@ -21,7 +39,12 @@ public class Functions {
      */
     public static Map<String, String> retrieveLibraries() {
         Map<String, String> libraries = new LinkedHashMap<>();
+        String leptversion          = Leptonica1.getLeptonicaVersion().getString(0);
+        String leptimagelibversions = Leptonica1.getImagelibVersions().getString(0);
         libraries.put("opencv", Core.VERSION);
+        libraries.put("tess4j", TessAPI1.TessVersion());
+        libraries.put("lept4j", leptversion);
+        libraries.put("lept4j_imagelib", leptimagelibversions);
         return libraries;
     }    
 
@@ -89,5 +112,71 @@ public class Functions {
     
         return image;
     }
+
+    public static Image ReturnWaitImage(Image... img) {
+        File imageFile = new File("meetme.png");
+        try {
+            if (!imageFile.exists()) {
+                System.err.println("an essential resource cannot be found.");
+                return null;
+            }
     
+            return ImageIO.read(imageFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+ 
+    public class Testing {
+        public void testWithImage(String imagePath) {
+            // Load the test image
+            Mat frame = Imgcodecs.imread(imagePath);
+            if (frame.empty()) {
+                System.out.println("Error: Could not load image.");
+                return;
+            }
+        
+            // Convert to HSV color space
+            Mat hsv = new Mat();
+            Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
+        
+            // Define HSV ranges for red and blue
+            Scalar lowerRed = new Scalar(0, 100, 100);
+            Scalar upperRed = new Scalar(10, 255, 255);
+            Scalar lowerBlue = new Scalar(100, 100, 100);
+            Scalar upperBlue = new Scalar(140, 255, 255);
+        
+            // Create masks
+            Mat maskRed = new Mat();
+            Mat maskBlue = new Mat();
+            Core.inRange(hsv, lowerRed, upperRed, maskRed);
+            Core.inRange(hsv, lowerBlue, upperBlue, maskBlue);
+        
+            // Find contours
+            List<MatOfPoint> contoursRed = new ArrayList<>();
+            List<MatOfPoint> contoursBlue = new ArrayList<>();
+            Imgproc.findContours(maskRed, contoursRed, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            Imgproc.findContours(maskBlue, contoursBlue, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        
+            // Draw bounding rectangles instead of contours
+            for (MatOfPoint contour : contoursRed) {
+                if (Imgproc.contourArea(contour) > 500) { // Ignore small areas (noise)
+                    Rect rect = Imgproc.boundingRect(contour);
+                    Imgproc.rectangle(frame, rect, new Scalar(0, 0, 255), 3); // Red box
+                }
+            }
+        
+            for (MatOfPoint contour : contoursBlue) {
+                if (Imgproc.contourArea(contour) > 500) {
+                    Rect rect = Imgproc.boundingRect(contour);
+                    Imgproc.rectangle(frame, rect, new Scalar(255, 0, 0), 3); // Blue box
+                }
+            }
+        
+            // Save or display the output image
+            Imgcodecs.imwrite("output.jpg", frame);
+            System.out.println("Processed image saved as output.jpg");
+        }
+    }
 }
