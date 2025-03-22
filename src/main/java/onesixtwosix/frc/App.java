@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Scanner;
 // import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import javax.swing.Action;
 import javax.swing.JFrame;
@@ -316,31 +317,45 @@ class VideoPanel extends JPanel implements Runnable {
             Imgproc.cvtColor(frame, processedFrame, Imgproc.COLOR_BGR2RGB);
 
             try {
-                BufferedImage textImage = Functions.Mat2BufferedImage2(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
+                BufferedImage textImage = Functions.Mat2BufferedImage2(thresh);
                 if (textImage == null) {
-                    res = "ocr err (null image)";
+                    res = "ocr err";
                 } else {
                     res = tess.doOCR(textImage);
-                    // Filter and get numbers
-                    res = res.replaceAll("[^0-9]", "");
-                    
-                    if (!res.isEmpty()) {
-                        int resInt = Integer.parseInt(res);
-                        int[] res25 = new int[10];
-
-                        for (int i=0;i>10;i++) {
-                            res25[i] = resInt;
-                        }
-
-                        System.out.println(Arrays.toString(res25));
-                    } else {
-                        System.err.println("no valid numbers found");
-                    }
+                    res.replaceAll("[^0-9]", "");
+                    // implement a away to filiter out team number from ocr
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                res = "ocr err";
+                res = "ocr err (check stacktrace)";
             }
+
+            // try {
+            //     BufferedImage textImage = Functions.Mat2BufferedImage2(thresh); // ArrayIndexOutOfBounds - possibly buffer overflow protection?
+            //     if (textImage == null) {
+            //         res = "ocr err (null image)";
+            //     } else {
+            //         res = tess.doOCR(textImage);
+            //         // Filter and get numbers
+            //         res = res.replaceAll("[^0-9]", "");
+                    
+            //         if (!res.isEmpty()) {
+            //             int resInt = Integer.parseInt(res);
+            //             int[] res25 = new int[10];
+
+            //             for (int i=0;i>10;i++) {
+            //                 res25[i] = resInt;
+            //             }
+
+            //             System.out.println(Arrays.toString(res25));
+            //         } else {
+            //             System.err.println("no valid numbers found");
+            //         }
+            //     }
+            // } catch (Exception e) {
+            //     e.printStackTrace();
+            //     res = "ocr err";
+            // }
 
 
     
