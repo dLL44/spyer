@@ -205,6 +205,8 @@ class VideoPanel extends JPanel implements Runnable {
         tess.setLanguage("eng");
         tess.setDatapath("/usr/share/tesseract-ocr/5/tessdata");
         Mat frame = new Mat();
+        final int SIZEMAXRECT    = 1000;
+        final int SIZEMAXCONTOUR = 1500;
         while (true) {
             capture.read(frame);
             if (frame.empty()) {
@@ -272,14 +274,14 @@ class VideoPanel extends JPanel implements Runnable {
             // Filter out small contours (noise reduction)
             List<MatOfPoint> filteredContoursRed = new ArrayList<>();
             for (MatOfPoint contour : contoursRed) {
-                if (Imgproc.contourArea(contour) > 100) { // Minimum area threshold
+                if (Imgproc.contourArea(contour) > SIZEMAXCONTOUR) { // Minimum area threshold
                     filteredContoursRed.add(contour);
                 }
             }
     
             List<MatOfPoint> filteredContoursBlue = new ArrayList<>();
             for (MatOfPoint contour : contoursBlue) {
-                if (Imgproc.contourArea(contour) > 100) { // Minimum area threshold
+                if (Imgproc.contourArea(contour) > SIZEMAXCONTOUR) { // Minimum area threshold
                     filteredContoursBlue.add(contour);
                 }
             }
@@ -288,15 +290,16 @@ class VideoPanel extends JPanel implements Runnable {
             Imgproc.drawContours(frame, filteredContoursRed, -1, new Scalar(0, 0, 255), 3); // Red contours in BGR
             Imgproc.drawContours(frame, filteredContoursBlue, -1, new Scalar(255, 0, 0), 3); // Blue contours in BGR
 
+
             for (MatOfPoint contour : contoursRed) {
-                if (Imgproc.contourArea(contour) > 500) { // Ignore small areas (noise)
+                if (Imgproc.contourArea(contour) > SIZEMAXRECT) { // Ignore small areas (noise)
                     Rect rect = Imgproc.boundingRect(contour);
                     Imgproc.rectangle(frame, rect, new Scalar(0, 0, 255), 3); // Red box
                 }
             }
             
             for (MatOfPoint contour : contoursBlue) {
-                if (Imgproc.contourArea(contour) > 500) {
+                if (Imgproc.contourArea(contour) > SIZEMAXRECT) {
                     Rect rect = Imgproc.boundingRect(contour);
                     Imgproc.rectangle(frame, rect, new Scalar(255, 0, 0), 3); // Blue box
                 }
@@ -323,6 +326,7 @@ class VideoPanel extends JPanel implements Runnable {
                 } else {
                     res = tess.doOCR(textImage);
                     res.replaceAll("[^0-9]", "");
+                    res = res;
                     // implement a away to filiter out team number from ocr
                 }
             } catch (Exception e) {
