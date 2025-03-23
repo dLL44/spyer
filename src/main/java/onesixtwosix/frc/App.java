@@ -7,25 +7,25 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.PopupMenu;
+// import java.awt.PopupMenu;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Array;
+// import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
+// import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 // import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+// import java.util.concurrent.atomic.AtomicInteger;
+// import java.util.function.Function;
 
-import javax.swing.Action;
+// import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
+// import javax.swing.JPopupMenu;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -35,9 +35,8 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.*;
-import net.sourceforge.tess4j.util.*;
+// import net.sourceforge.tess4j.util.*;
 
 public class App {
     // Declare globals
@@ -45,9 +44,11 @@ public class App {
     private static VideoCapture capture = null;
     // private static int cameraIndex = 0;
     public static boolean changingCameras = false;
+
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
+        VideoPanel videoPanel = new VideoPanel(capture);
         int cameraIndex = 0;
 
         System.out.println("spyer\n---\nget cooking");
@@ -96,30 +97,49 @@ public class App {
 
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("Settings");
+        JMenu options = new JMenu("Options");
+        menuBar.add(options);
         menuBar.add(menu);
         mainFrame.setJMenuBar(menuBar);
         
         JMenuItem changeCI = new JMenuItem("Switch Cameras");
         changeCI.addActionListener(e -> {
-            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
+            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "New index (use list from output):", 0);
             try {
                 int newIndex = Integer.parseInt(newIndexStr);
                 if (cameras.contains(newIndex)) {
                     changingCameras = true;
-                    capture.release();
-                    capture.open(newIndex);
+
+                    // Stop the current capture
+                    videoPanel.stopCapture();
+                
+                    // Create new VideoCapture instance
+                    VideoCapture newCapture = new VideoCapture(newIndex);
+                    if (!newCapture.isOpened()) {
+                        JOptionPane.showMessageDialog(mainFrame, "Failed to open camera", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                
+                    // Set new capture to video panel and restart
+                    videoPanel.setCapture(newCapture);
+                    new Thread(videoPanel).start();
+                
                     changingCameras = false;
                 } else {
-                    JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(mainFrame, "Invalid index", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame, "Invalid input", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
         menu.add(changeCI);
 
+        JMenuItem closeSpyer = new JMenuItem("Close");
+        closeSpyer.addActionListener(e -> {
+            System.exit(0);
+        });
+        options.add(closeSpyer);
 
-        VideoPanel videoPanel = new VideoPanel(capture);
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         
@@ -130,16 +150,28 @@ public class App {
 
 // Custom JPanel for displaying camera feeds
 class VideoPanel extends JPanel implements Runnable {
-    private final VideoCapture capture;
+    private VideoCapture capture;
     private Image processedImage;
     private Image regularImage;
     private String res;
     private App app = new App();
     private Mat frame = new Mat();
+    private int teamNumberFilter = 1626; // set to ours as an example
 
     public VideoPanel(VideoCapture capture) {
         this.capture = capture;
     }
+
+    public synchronized void setCapture(VideoCapture newCapture) {
+        this.capture.release(); // Release old capture
+        this.capture = newCapture;
+    }
+    
+    public synchronized void stopCapture() {
+        if (capture.isOpened()) {
+            capture.release();
+        }
+    }    
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -208,9 +240,11 @@ class VideoPanel extends JPanel implements Runnable {
         ITesseract tess = new Tesseract();
         tess.setLanguage("eng");
         tess.setDatapath("/usr/share/tesseract-ocr/5/tessdata");
+        tess.setVariable("tessedit_char_whitelist", Integer.toString(teamNumberFilter));
 
         final int SIZEMAXRECT    = 1000;
-        final int SIZEMINCONTOUR = 1;
+        final int SIZEMINCONTOUR = Constants.Chaos.Logicalivity;
+
         while (true) {
             capture.read(frame);
             if (frame.empty()) {
@@ -244,14 +278,12 @@ class VideoPanel extends JPanel implements Runnable {
             Mat maskRed1 = new Mat();
             Mat maskRed2 = new Mat();
             Mat maskBlue = new Mat();
-    
+            Mat maskBlue2 = new Mat();
+            Mat maskBlue3 = new Mat();
+
             Core.inRange(hsv, lowerRed1, upperRed1, maskRed1);
             Core.inRange(hsv, lowerRed2, upperRed2, maskRed2);
             Core.inRange(hsv, lowerBlue, upperBlue, maskBlue);
-    
-            Mat maskBlue2 = new Mat();
-            Mat maskBlue3 = new Mat();
-    
             Core.inRange(hsv, lowerBlue2, upperBlue2, maskBlue2);
             Core.inRange(hsv, lowerBlue3, upperBlue3, maskBlue3);
     
@@ -329,9 +361,15 @@ class VideoPanel extends JPanel implements Runnable {
                     res = "ocr err";
                 } else {
                     res = tess.doOCR(textImage);
-                    // implement a away to filiter out team number from ocr
+                    String strippedRes = res.replaceAll("[^0-9]", "");
+                    res = strippedRes;
+
+                    if (res.contains(Integer.toString(teamNumberFilter))) {
+                        res = Integer.toString(teamNumberFilter);
+                    } else {
+                        res = strippedRes;
+                    }
                 }
-                res = res.replaceAll("[^0-9]", "");
             } catch (Exception e) {
                 e.printStackTrace();
                 res = "ocr err (check stacktrace)";
@@ -375,7 +413,7 @@ class VideoPanel extends JPanel implements Runnable {
     
             // Delay to control frame rate
             try {
-                Thread.sleep(10); // around 40-50 FPS
+                Thread.sleep(1); // around 40-50 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
