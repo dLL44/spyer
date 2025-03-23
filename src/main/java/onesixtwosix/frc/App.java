@@ -35,6 +35,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
+import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.*;
 // import net.sourceforge.tess4j.util.*;
 
@@ -44,11 +45,9 @@ public class App {
     private static VideoCapture capture = null;
     // private static int cameraIndex = 0;
     public static boolean changingCameras = false;
-
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-        VideoPanel videoPanel = new VideoPanel(capture);
         int cameraIndex = 0;
 
         System.out.println("spyer\n---\nget cooking");
@@ -104,32 +103,19 @@ public class App {
         
         JMenuItem changeCI = new JMenuItem("Switch Cameras");
         changeCI.addActionListener(e -> {
-            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "New index (use list from output):", 0);
+            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
             try {
                 int newIndex = Integer.parseInt(newIndexStr);
                 if (cameras.contains(newIndex)) {
                     changingCameras = true;
-
-                    // Stop the current capture
-                    videoPanel.stopCapture();
-                
-                    // Create new VideoCapture instance
-                    VideoCapture newCapture = new VideoCapture(newIndex);
-                    if (!newCapture.isOpened()) {
-                        JOptionPane.showMessageDialog(mainFrame, "Failed to open camera", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                
-                    // Set new capture to video panel and restart
-                    videoPanel.setCapture(newCapture);
-                    new Thread(videoPanel).start();
-                
+                    capture.release();
+                    capture.open(newIndex);
                     changingCameras = false;
                 } else {
-                    JOptionPane.showMessageDialog(mainFrame, "Invalid index", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(mainFrame, "Invalid input", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
             }
         });
         menu.add(changeCI);
@@ -140,6 +126,8 @@ public class App {
         });
         options.add(closeSpyer);
 
+
+        VideoPanel videoPanel = new VideoPanel(capture);
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         
@@ -150,7 +138,7 @@ public class App {
 
 // Custom JPanel for displaying camera feeds
 class VideoPanel extends JPanel implements Runnable {
-    private VideoCapture capture;
+    private final VideoCapture capture;
     private Image processedImage;
     private Image regularImage;
     private String res;
@@ -161,17 +149,6 @@ class VideoPanel extends JPanel implements Runnable {
     public VideoPanel(VideoCapture capture) {
         this.capture = capture;
     }
-
-    public synchronized void setCapture(VideoCapture newCapture) {
-        this.capture.release(); // Release old capture
-        this.capture = newCapture;
-    }
-    
-    public synchronized void stopCapture() {
-        if (capture.isOpened()) {
-            capture.release();
-        }
-    }    
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -278,12 +255,14 @@ class VideoPanel extends JPanel implements Runnable {
             Mat maskRed1 = new Mat();
             Mat maskRed2 = new Mat();
             Mat maskBlue = new Mat();
-            Mat maskBlue2 = new Mat();
-            Mat maskBlue3 = new Mat();
-
+    
             Core.inRange(hsv, lowerRed1, upperRed1, maskRed1);
             Core.inRange(hsv, lowerRed2, upperRed2, maskRed2);
             Core.inRange(hsv, lowerBlue, upperBlue, maskBlue);
+    
+            Mat maskBlue2 = new Mat();
+            Mat maskBlue3 = new Mat();
+    
             Core.inRange(hsv, lowerBlue2, upperBlue2, maskBlue2);
             Core.inRange(hsv, lowerBlue3, upperBlue3, maskBlue3);
     
