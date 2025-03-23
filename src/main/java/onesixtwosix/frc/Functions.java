@@ -31,7 +31,9 @@ import org.opencv.imgproc.Imgproc;
 import net.sourceforge.lept4j.*;
 import net.sourceforge.lept4j.util.*;
 
-
+/**
+ * A class of functions used throughout App.java for images, testing, and libraries.
+ */
 public class Functions {
     /**
      * Retrieves libraries' verisons, nothing complex
@@ -112,7 +114,11 @@ public class Functions {
     
         return image;
     }
-
+    /**
+     * Return wait image
+     * @param img
+     * @return wait image
+     */
     public static Image ReturnWaitImage(Image... img) {
         File imageFile = new File("meetme.png");
         try {
@@ -128,7 +134,15 @@ public class Functions {
         }
     }
  
+    /**
+     * A class with functions for testing and etc.
+     */
     public class Testing {
+        /**
+         * Test OpenCV and Tesseract with a single immage
+         * @param imagePath
+         * @return output.jpg
+         */
         public void testWithImage(String imagePath) {
             // Load the test image
             Mat frame = Imgcodecs.imread(imagePath);

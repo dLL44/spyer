@@ -1,5 +1,8 @@
 package onesixtwosix.frc;
 
+import onesixtwosix.frc.Constants;
+import onesixtwosix.frc.Functions;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -132,6 +135,7 @@ class VideoPanel extends JPanel implements Runnable {
     private Image regularImage;
     private String res;
     private App app = new App();
+    private Mat frame = new Mat();
 
     public VideoPanel(VideoCapture capture) {
         this.capture = capture;
@@ -143,7 +147,7 @@ class VideoPanel extends JPanel implements Runnable {
         Graphics2D g2d = (Graphics2D) g;
 
         if (regularImage != null && processedImage != null) {
-            if (app.changingCameras == false) {
+            if (!frame.empty()) {
                 // Draw background
                 g2d.setColor(Color.DARK_GRAY);
                 g2d.fillRect(0, 0, 1400, 700);
@@ -204,9 +208,9 @@ class VideoPanel extends JPanel implements Runnable {
         ITesseract tess = new Tesseract();
         tess.setLanguage("eng");
         tess.setDatapath("/usr/share/tesseract-ocr/5/tessdata");
-        Mat frame = new Mat();
+
         final int SIZEMAXRECT    = 1000;
-        final int SIZEMAXCONTOUR = 1500;
+        final int SIZEMINCONTOUR = 1;
         while (true) {
             capture.read(frame);
             if (frame.empty()) {
@@ -274,14 +278,14 @@ class VideoPanel extends JPanel implements Runnable {
             // Filter out small contours (noise reduction)
             List<MatOfPoint> filteredContoursRed = new ArrayList<>();
             for (MatOfPoint contour : contoursRed) {
-                if (Imgproc.contourArea(contour) > SIZEMAXCONTOUR) { // Minimum area threshold
+                if (Imgproc.contourArea(contour) > SIZEMINCONTOUR) { // Minimum area threshold
                     filteredContoursRed.add(contour);
                 }
             }
     
             List<MatOfPoint> filteredContoursBlue = new ArrayList<>();
             for (MatOfPoint contour : contoursBlue) {
-                if (Imgproc.contourArea(contour) > SIZEMAXCONTOUR) { // Minimum area threshold
+                if (Imgproc.contourArea(contour) > SIZEMINCONTOUR) { // Minimum area threshold
                     filteredContoursBlue.add(contour);
                 }
             }
@@ -325,10 +329,9 @@ class VideoPanel extends JPanel implements Runnable {
                     res = "ocr err";
                 } else {
                     res = tess.doOCR(textImage);
-                    res.replaceAll("[^0-9]", "");
-                    res = res;
                     // implement a away to filiter out team number from ocr
                 }
+                res = res.replaceAll("[^0-9]", "");
             } catch (Exception e) {
                 e.printStackTrace();
                 res = "ocr err (check stacktrace)";
