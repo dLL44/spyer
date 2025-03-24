@@ -49,6 +49,7 @@ public class App {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         int cameraIndex = 0;
+        VideoPanel videoPanel = new VideoPanel(capture);
 
         System.out.println("spyer\n---\nget cooking");
 
@@ -101,24 +102,35 @@ public class App {
         menuBar.add(menu);
         mainFrame.setJMenuBar(menuBar);
         
-        JMenuItem changeCI = new JMenuItem("Switch Cameras");
-        changeCI.addActionListener(e -> {
-            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
+        JMenuItem changeFPS = new JMenuItem("Change Framerate");
+        changeFPS.addActionListener(e -> {
+            String newFRstr = JOptionPane.showInputDialog(mainFrame, "new framerate", 50);
             try {
-                int newIndex = Integer.parseInt(newIndexStr);
-                if (cameras.contains(newIndex)) {
-                    changingCameras = true;
-                    capture.release();
-                    capture.open(newIndex);
-                    changingCameras = false;
-                } else {
-                    JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
-            }
+                int newFR = Integer.parseInt(newFRstr);
+                videoPanel.threadSleep = newFR;
+                
+            } catch (Exception ex) {ex.printStackTrace();}
+
         });
-        menu.add(changeCI);
+
+        // JMenuItem changeCI = new JMenuItem("Switch Cameras");
+        // changeCI.addActionListener(e -> {
+        //     String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
+        //     try {
+        //         int newIndex = Integer.parseInt(newIndexStr);
+        //         if (cameras.contains(newIndex)) {
+        //             changingCameras = true;
+        //             capture.release();
+        //             capture.open(newIndex);
+        //             changingCameras = false;
+        //         } else {
+        //             JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
+        //         }
+        //     } catch (NumberFormatException ex) {
+        //         JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
+        //     }
+        // });
+        // menu.add(changeCI);
 
         JMenuItem closeSpyer = new JMenuItem("Close");
         closeSpyer.addActionListener(e -> {
@@ -127,7 +139,6 @@ public class App {
         options.add(closeSpyer);
 
 
-        VideoPanel videoPanel = new VideoPanel(capture);
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         
@@ -145,6 +156,7 @@ class VideoPanel extends JPanel implements Runnable {
     private App app = new App();
     private Mat frame = new Mat();
     private int teamNumberFilter = 1626; // set to ours as an example
+    public  int threadSleep = 1;
 
     public VideoPanel(VideoCapture capture) {
         this.capture = capture;
@@ -392,7 +404,7 @@ class VideoPanel extends JPanel implements Runnable {
     
             // Delay to control frame rate
             try {
-                Thread.sleep(1); // around 40-50 FPS
+                Thread.sleep(threadSleep); // around 40-50 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
