@@ -26,6 +26,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextArea;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -85,8 +86,7 @@ public class App {
         }
 
 
-        // Create JFrame with a custom JPanel
-        // make menubar with settings: Change camera, show regular output, show OCR, etc
+        // Create JFrame with a custom JPanel 
         JFrame mainFrame = new JFrame("spyer - camera feed");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setSize(1400, 700);
@@ -95,28 +95,23 @@ public class App {
         mainFrame.setBackground(Color.DARK_GRAY);
 
         JMenuBar menuBar = new JMenuBar();
-        JMenu menu = new JMenu("Settings");
-        menuBar.add(menu);
+        JMenu options = new JMenu("Options");
         mainFrame.setJMenuBar(menuBar);
         
-        JMenuItem changeCI = new JMenuItem("Switch Cameras");
-        changeCI.addActionListener(e -> {
-            String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
+        // Various 
+        JMenuItem closeButton = new JMenuItem("Close");
+        closeButton.addActionListener(e -> {
             try {
-                int newIndex = Integer.parseInt(newIndexStr);
-                if (cameras.contains(newIndex)) {
-                    changingCameras = true;
-                    capture.release();
-                    capture.open(newIndex);
-                    changingCameras = false;
-                } else {
-                    JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
+                System.exit(0);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
             }
         });
-        menu.add(changeCI);
+        menuBar.add(closeButton);
+
+        // Options
+        menuBar.add(options);
 
 
         VideoPanel videoPanel = new VideoPanel(capture);
@@ -382,4 +377,9 @@ class VideoPanel extends JPanel implements Runnable {
         }
     }
         
+}
+
+// todo
+class debugWindow {
+    private static JTextArea debugText;
 }
