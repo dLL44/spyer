@@ -2,7 +2,6 @@ package onesixtwosix.frc.Classes;
 
 import javax.swing.*;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.ByteArrayOutputStream;
 
 public class TextAreaOutputStream extends OutputStream {

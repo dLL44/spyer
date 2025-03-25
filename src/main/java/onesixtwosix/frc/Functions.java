@@ -19,17 +19,12 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
 
-import com.sun.jna.Pointer;
-
-import net.sourceforge.tess4j.TessAPI;
 import net.sourceforge.tess4j.TessAPI1;
-import net.sourceforge.tess4j.Tesseract;
 
 import org.opencv.imgcodecs.Imgcodecs; // For reading images
 import org.opencv.imgproc.Imgproc;
 
 import net.sourceforge.lept4j.*;
-import net.sourceforge.lept4j.util.*;
 
 /**
  * A class of functions used throughout App.java for images, testing, and libraries.
@@ -69,7 +64,7 @@ public class Functions {
 
     /**
      * Convert a given mat to a buffered image
-     * @param mat
+     * @param mat Mat
      * @return a buffered image of provided mat
      */
     public static BufferedImage Mat2BufferedImage(Mat mat) {
@@ -83,6 +78,11 @@ public class Functions {
         return image;
     }
 
+    /**
+     * Convert a given Mat to a buffered image (experimental)
+     * @param mat Mat
+     * @return buffered image of provided mat
+     */
     public static BufferedImage Mat2BufferedImage2(Mat mat) {
         int width = mat.width();
         int height = mat.height();
@@ -116,7 +116,7 @@ public class Functions {
     }
     /**
      * Return wait image
-     * @param img
+     * @param img Image
      * @return wait image
      */
     public static Image ReturnWaitImage(Image... img) {
@@ -140,7 +140,7 @@ public class Functions {
     public class Testing {
         /**
          * Test OpenCV and Tesseract with a single immage
-         * @param imagePath
+         * @param imagePath image path
          * @return output.jpg
          */
         public void testWithImage(String imagePath) {
