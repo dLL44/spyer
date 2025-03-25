@@ -50,6 +50,8 @@ import org.opencv.videoio.VideoCapture;
 import net.sourceforge.tess4j.*;
 import net.sourceforge.tess4j.util.*;
 
+import com.formdev.flatlaf.*;
+
 public class App {
     // Declare globals
     public static VideoCapture capture = null;
@@ -63,15 +65,10 @@ public class App {
         int cameraIndex = 0;
         debugWindow dbgwindow = new debugWindow();
         System.out.println("dbgwindow made");
+        
         try {
-            UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
-        } catch (UnsupportedLookAndFeelException ex) {
-            ex.printStackTrace();
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
-        } catch (InstantiationException ex) {
-            ex.printStackTrace();
-        } catch (IllegalAccessException ex) {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         System.out.println("spyer\n---\nget cooking");
@@ -161,6 +158,11 @@ class VideoPanel extends JPanel implements Runnable {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        // Going off of #3b3f42
+        Color bgColor = new Color(0x3b, 0x3f, 0x42);
+        // Convert RGB to HSB
+        float[] bgHSB = Color.RGBtoHSB(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), null);
+
 
         if (regularImage != null && processedImage != null) {
             if (!frame.empty()) {
@@ -171,51 +173,24 @@ class VideoPanel extends JPanel implements Runnable {
 
                 // Draw regular feed
                 g2d.drawImage(regularImage, 0, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
+                g2d.setColor(Color.getHSBColor(bgHSB[0], bgHSB[1], bgHSB[2]));
                 g2d.fillRect(0, 0, 140, 20);
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(Color.white);
                 g2d.drawString("regular", 10, 15);
 
                 // Draw processed feed
                 g2d.drawImage(processedImage, 660, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
+                g2d.setColor(Color.getHSBColor(bgHSB[0], bgHSB[1], bgHSB[2]));
                 g2d.fillRect(660, 0, 180, 20);
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(Color.white);
                 g2d.drawString("processed", 670, 15);
 
                 // Draw OCR
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(0, 620, 1400, 30); // White background for text
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(Color.getHSBColor(bgHSB[0], bgHSB[1], bgHSB[2]));
+                g2d.fillRect(0, 620, 1400, 30);
+                g2d.setColor(Color.white);
                 g2d.drawString("OCR: " + res, 10, 635);
-            } else {
-                Functions.ReturnWaitImage(regularImage, processedImage);
-                // Draw background
-                g2d.setColor(Color.DARK_GRAY);
-                g2d.fillRect(0, 0, 1400, 700);
-
-
-                // Draw regular feed
-                g2d.drawImage(regularImage, 0, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(0, 0, 140, 20);
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("regular", 10, 15);
-
-                // Draw processed feed
-                g2d.drawImage(processedImage, 660, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(660, 0, 180, 20);
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("processed", 670, 15);
-
-                // Draw OCR
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(0, 620, 1400, 30); // White background for text
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("OCR: " + res, 10, 635);
-            }
-
+            } 
         }
     }
 
