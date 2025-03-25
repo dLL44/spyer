@@ -2,8 +2,11 @@ package onesixtwosix.frc;
 
 import onesixtwosix.frc.Constants;
 import onesixtwosix.frc.Functions;
+import onesixtwosix.frc.Classes.TextAreaOutputStream;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -15,8 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 // import java.util.concurrent.ExecutionException;
-// import java.util.concurrent.atomic.AtomicInteger;
-// import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 // import javax.swing.Action;
 import javax.swing.JFrame;
@@ -25,7 +30,14 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-// import javax.swing.JPopupMenu;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.Border;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -35,22 +47,30 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.*;
-// import net.sourceforge.tess4j.util.*;
+import net.sourceforge.tess4j.util.*;
+
+import com.formdev.flatlaf.*;
 
 public class App {
     // Declare globals
-    private static Scanner inputScanner = new Scanner(System.in);
-    private static VideoCapture capture = null;
+    public static VideoCapture capture = null;
     // private static int cameraIndex = 0;
     public static boolean changingCameras = false;
+    public static int teamNoFilter = 1626; // ours for testing and example
+
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         int cameraIndex = 0;
-        VideoPanel videoPanel = new VideoPanel(capture);
-
+        debugWindow dbgwindow = new debugWindow();
+        System.out.println("dbgwindow made");
+        
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         System.out.println("spyer\n---\nget cooking");
 
         // Retrieve library info
@@ -66,7 +86,7 @@ public class App {
         // If multiple cameras exist, let the user pick one
         if (cameras.size() > 1) {
             System.err.println("Pick an index, or by default 0 will be chosen:");
-            cameraIndex = inputScanner.nextInt();
+            cameraIndex = Integer.parseInt(JOptionPane.showInputDialog(null, "Pick an index, or by default 0 will be chosen", 0));
             if (cameraIndex < 0 || cameraIndex >= cameras.size()) {
                 System.err.println("Invalid, setting to 0.");
                 cameraIndex = 0;
@@ -86,59 +106,31 @@ public class App {
         }
 
 
-        // Create JFrame with a custom JPanel
-        // make menubar with settings: Change camera, show regular output, show OCR, etc
+        // Create JFrame with a custom JPanel 
         JFrame mainFrame = new JFrame("spyer - camera feed");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setSize(1400, 700);
+        mainFrame.setSize(1400, 715);
         mainFrame.setResizable(false);
         mainFrame.setAlwaysOnTop(false);
         mainFrame.setBackground(Color.DARK_GRAY);
 
         JMenuBar menuBar = new JMenuBar();
-        JMenu menu = new JMenu("Settings");
         JMenu options = new JMenu("Options");
-        menuBar.add(options);
-        menuBar.add(menu);
         mainFrame.setJMenuBar(menuBar);
-        
-        JMenuItem changeFPS = new JMenuItem("Change Framerate");
-        changeFPS.addActionListener(e -> {
-            String newFRstr = JOptionPane.showInputDialog(mainFrame, "new framerate", 50);
+
+        // Options
+        JMenuItem changeTeamFilter = new JMenuItem("Change Team Filter...");
+        changeTeamFilter.addActionListener(e -> {
             try {
-                int newFR = Integer.parseInt(newFRstr);
-                videoPanel.threadSleep = newFR;
-                
-            } catch (Exception ex) {ex.printStackTrace();}
-
+                int newTeamFilter = Integer.parseInt(JOptionPane.showInputDialog(mainFrame, "Insert new team number to look for", teamNoFilter));
+                teamNoFilter = newTeamFilter;
+            } catch (Exception ex) { ex.printStackTrace(); }
         });
-
-        // JMenuItem changeCI = new JMenuItem("Switch Cameras");
-        // changeCI.addActionListener(e -> {
-        //     String newIndexStr = JOptionPane.showInputDialog(mainFrame, "new index (use list from output):", 0);
-        //     try {
-        //         int newIndex = Integer.parseInt(newIndexStr);
-        //         if (cameras.contains(newIndex)) {
-        //             changingCameras = true;
-        //             capture.release();
-        //             capture.open(newIndex);
-        //             changingCameras = false;
-        //         } else {
-        //             JOptionPane.showMessageDialog(mainFrame, "unable to change | invalid index", "error", JOptionPane.ERROR_MESSAGE);
-        //         }
-        //     } catch (NumberFormatException ex) {
-        //         JOptionPane.showMessageDialog(mainFrame, "invalid input", "error", JOptionPane.ERROR_MESSAGE);
-        //     }
-        // });
-        // menu.add(changeCI);
-
-        JMenuItem closeSpyer = new JMenuItem("Close");
-        closeSpyer.addActionListener(e -> {
-            System.exit(0);
-        });
-        options.add(closeSpyer);
+        options.add(changeTeamFilter);
+        menuBar.add(options);
 
 
+        VideoPanel videoPanel = new VideoPanel(capture, teamNoFilter);
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         
@@ -150,6 +142,7 @@ public class App {
 // Custom JPanel for displaying camera feeds
 class VideoPanel extends JPanel implements Runnable {
     private final VideoCapture capture;
+    private int teamNoFilter;
     private Image processedImage;
     private Image regularImage;
     private String res;
@@ -158,14 +151,20 @@ class VideoPanel extends JPanel implements Runnable {
     private int teamNumberFilter = 1626; // set to ours as an example
     public  int threadSleep = 1;
 
-    public VideoPanel(VideoCapture capture) {
+    public VideoPanel(VideoCapture capture, int teamNoFilter) {
         this.capture = capture;
+        this.teamNoFilter = teamNoFilter;
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        // Going off of #3b3f42
+        Color bgColor = new Color(0x3b, 0x3f, 0x42);
+        // Convert RGB to HSB
+        float[] bgHSB = Color.RGBtoHSB(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), null);
+
 
         if (regularImage != null && processedImage != null) {
             if (!frame.empty()) {
@@ -176,51 +175,24 @@ class VideoPanel extends JPanel implements Runnable {
 
                 // Draw regular feed
                 g2d.drawImage(regularImage, 0, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
+                g2d.setColor(Color.getHSBColor(bgHSB[0], bgHSB[1], bgHSB[2]));
                 g2d.fillRect(0, 0, 140, 20);
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(Color.white);
                 g2d.drawString("regular", 10, 15);
 
                 // Draw processed feed
                 g2d.drawImage(processedImage, 660, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
+                g2d.setColor(Color.getHSBColor(bgHSB[0], bgHSB[1], bgHSB[2]));
                 g2d.fillRect(660, 0, 180, 20);
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(Color.white);
                 g2d.drawString("processed", 670, 15);
 
                 // Draw OCR
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(0, 620, 1400, 30); // White background for text
-                g2d.setColor(Color.BLACK);
+                g2d.setColor(Color.getHSBColor(bgHSB[0], bgHSB[1], bgHSB[2]));
+                g2d.fillRect(0, 620, 1400, 30);
+                g2d.setColor(Color.white);
                 g2d.drawString("OCR: " + res, 10, 635);
-            } else {
-                Functions.ReturnWaitImage(regularImage, processedImage);
-                // Draw background
-                g2d.setColor(Color.DARK_GRAY);
-                g2d.fillRect(0, 0, 1400, 700);
-
-
-                // Draw regular feed
-                g2d.drawImage(regularImage, 0, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(0, 0, 140, 20);
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("regular", 10, 15);
-
-                // Draw processed feed
-                g2d.drawImage(processedImage, 660, 0, 640, 640, this);
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(660, 0, 180, 20);
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("processed", 670, 15);
-
-                // Draw OCR
-                g2d.setColor(Color.WHITE);
-                g2d.fillRect(0, 620, 1400, 30); // White background for text
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("OCR: " + res, 10, 635);
-            }
-
+            } 
         }
     }
 
@@ -232,8 +204,7 @@ class VideoPanel extends JPanel implements Runnable {
         tess.setVariable("tessedit_char_whitelist", Integer.toString(teamNumberFilter));
 
         final int SIZEMAXRECT    = 1000;
-        final int SIZEMINCONTOUR = Constants.Chaos.Logicalivity;
-
+        final int SIZEMINCONTOUR = 100;
         while (true) {
             capture.read(frame);
             if (frame.empty()) {
@@ -352,14 +323,12 @@ class VideoPanel extends JPanel implements Runnable {
                     res = "ocr err";
                 } else {
                     res = tess.doOCR(textImage);
-                    String strippedRes = res.replaceAll("[^0-9]", "");
-                    res = strippedRes;
-
-                    if (res.contains(Integer.toString(teamNumberFilter))) {
-                        res = Integer.toString(teamNumberFilter);
-                    } else {
-                        res = strippedRes;
-                    }
+                }
+                res = res.replaceAll("[^0-9]", "");
+                if (res.contains(Integer.toString(teamNoFilter))) {
+                    res = Integer.toString(teamNoFilter);
+                } else {
+                    res = res.replaceAll("[^0-9]", "");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -404,11 +373,39 @@ class VideoPanel extends JPanel implements Runnable {
     
             // Delay to control frame rate
             try {
-                Thread.sleep(threadSleep); // around 40-50 FPS
+                Thread.sleep(1); // around 40-50 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
         
+}
+
+// todo
+class debugWindow {
+    private static JTextArea debugText;     
+    private static JFrame debugFrame;
+
+    public debugWindow() {
+        debugFrame = new JFrame();
+        debugText = new JTextArea();
+
+        debugFrame.setResizable(false);
+        debugFrame.setSize(700, 500);
+        debugFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        debugText.setEditable(false);
+        debugText.setBackground(Color.BLACK);
+        debugText.setForeground(Color.GREEN);
+
+        JScrollPane scrollpane = new JScrollPane(debugText);
+        debugFrame.add(scrollpane, BorderLayout.CENTER);
+
+        debugFrame.setVisible(true);
+
+        PrintStream printstream = new PrintStream(new TextAreaOutputStream(debugText));
+        System.setOut(printstream);
+        System.setErr(printstream);
+    }
 }
