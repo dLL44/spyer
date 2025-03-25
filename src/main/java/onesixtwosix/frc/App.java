@@ -2,8 +2,11 @@ package onesixtwosix.frc;
 
 import onesixtwosix.frc.Constants;
 import onesixtwosix.frc.Functions;
+import onesixtwosix.frc.Classes.TextAreaOutputStream;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -17,6 +20,8 @@ import java.util.Scanner;
 // import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import javax.swing.Action;
 import javax.swing.JFrame;
@@ -26,7 +31,13 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.Border;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -36,21 +47,33 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.*;
 import net.sourceforge.tess4j.util.*;
 
 public class App {
     // Declare globals
-    private static Scanner inputScanner = new Scanner(System.in);
-    private static VideoCapture capture = null;
+    public static VideoCapture capture = null;
     // private static int cameraIndex = 0;
     public static boolean changingCameras = false;
+    public static int teamNoFilter = 1626; // ours for testing and example
+
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         int cameraIndex = 0;
-
+        debugWindow dbgwindow = new debugWindow();
+        System.out.println("dbgwindow made");
+        try {
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+        } catch (UnsupportedLookAndFeelException ex) {
+            ex.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (InstantiationException ex) {
+            ex.printStackTrace();
+        } catch (IllegalAccessException ex) {
+            ex.printStackTrace();
+        }
         System.out.println("spyer\n---\nget cooking");
 
         // Retrieve library info
@@ -66,7 +89,7 @@ public class App {
         // If multiple cameras exist, let the user pick one
         if (cameras.size() > 1) {
             System.err.println("Pick an index, or by default 0 will be chosen:");
-            cameraIndex = inputScanner.nextInt();
+            cameraIndex = Integer.parseInt(JOptionPane.showInputDialog(null, "Pick an index, or by default 0 will be chosen", 0));
             if (cameraIndex < 0 || cameraIndex >= cameras.size()) {
                 System.err.println("Invalid, setting to 0.");
                 cameraIndex = 0;
@@ -89,7 +112,7 @@ public class App {
         // Create JFrame with a custom JPanel 
         JFrame mainFrame = new JFrame("spyer - camera feed");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setSize(1400, 700);
+        mainFrame.setSize(1400, 715);
         mainFrame.setResizable(false);
         mainFrame.setAlwaysOnTop(false);
         mainFrame.setBackground(Color.DARK_GRAY);
@@ -97,24 +120,20 @@ public class App {
         JMenuBar menuBar = new JMenuBar();
         JMenu options = new JMenu("Options");
         mainFrame.setJMenuBar(menuBar);
-        
-        // Various 
-        JMenuItem closeButton = new JMenuItem("Close");
-        closeButton.addActionListener(e -> {
-            try {
-                System.exit(0);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return;
-            }
-        });
-        menuBar.add(closeButton);
 
         // Options
+        JMenuItem changeTeamFilter = new JMenuItem("Change Team Filter...");
+        changeTeamFilter.addActionListener(e -> {
+            try {
+                int newTeamFilter = Integer.parseInt(JOptionPane.showInputDialog(mainFrame, "Insert new team number to look for", teamNoFilter));
+                teamNoFilter = newTeamFilter;
+            } catch (Exception ex) { ex.printStackTrace(); }
+        });
+        options.add(changeTeamFilter);
         menuBar.add(options);
 
 
-        VideoPanel videoPanel = new VideoPanel(capture);
+        VideoPanel videoPanel = new VideoPanel(capture, teamNoFilter);
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         
@@ -126,14 +145,16 @@ public class App {
 // Custom JPanel for displaying camera feeds
 class VideoPanel extends JPanel implements Runnable {
     private final VideoCapture capture;
+    private int teamNoFilter;
     private Image processedImage;
     private Image regularImage;
     private String res;
     private App app = new App();
     private Mat frame = new Mat();
 
-    public VideoPanel(VideoCapture capture) {
+    public VideoPanel(VideoCapture capture, int teamNoFilter) {
         this.capture = capture;
+        this.teamNoFilter = teamNoFilter;
     }
 
     @Override
@@ -205,7 +226,7 @@ class VideoPanel extends JPanel implements Runnable {
         tess.setDatapath("/usr/share/tesseract-ocr/5/tessdata");
 
         final int SIZEMAXRECT    = 1000;
-        final int SIZEMINCONTOUR = 1;
+        final int SIZEMINCONTOUR = 100;
         while (true) {
             capture.read(frame);
             if (frame.empty()) {
@@ -324,9 +345,13 @@ class VideoPanel extends JPanel implements Runnable {
                     res = "ocr err";
                 } else {
                     res = tess.doOCR(textImage);
-                    // implement a away to filiter out team number from ocr
                 }
                 res = res.replaceAll("[^0-9]", "");
+                if (res.contains(Integer.toString(teamNoFilter))) {
+                    res = Integer.toString(teamNoFilter);
+                } else {
+                    res = res.replaceAll("[^0-9]", "");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 res = "ocr err (check stacktrace)";
@@ -370,7 +395,7 @@ class VideoPanel extends JPanel implements Runnable {
     
             // Delay to control frame rate
             try {
-                Thread.sleep(10); // around 40-50 FPS
+                Thread.sleep(1); // around 40-50 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -381,5 +406,28 @@ class VideoPanel extends JPanel implements Runnable {
 
 // todo
 class debugWindow {
-    private static JTextArea debugText;
+    private static JTextArea debugText;     
+    private static JFrame debugFrame;
+
+    public debugWindow() {
+        debugFrame = new JFrame();
+        debugText = new JTextArea();
+
+        debugFrame.setResizable(false);
+        debugFrame.setSize(700, 500);
+        debugFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        debugText.setEditable(false);
+        debugText.setBackground(Color.BLACK);
+        debugText.setForeground(Color.GREEN);
+
+        JScrollPane scrollpane = new JScrollPane(debugText);
+        debugFrame.add(scrollpane, BorderLayout.CENTER);
+
+        debugFrame.setVisible(true);
+
+        PrintStream printstream = new PrintStream(new TextAreaOutputStream(debugText));
+        System.setOut(printstream);
+        System.setErr(printstream);
+    }
 }
