@@ -12,6 +12,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
 
+import ai.djl.translate.TranslateException;
+import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.DetectedObjects.DetectedObject;
+import ai.djl.ModelException;
+
 import org.opencv.core.Core;
 import org.opencv.videoio.VideoCapture; 
 

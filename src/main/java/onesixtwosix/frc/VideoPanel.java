@@ -5,7 +5,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-
+import java.io.IOException;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -244,8 +245,8 @@ public class VideoPanel extends JPanel implements Runnable {
 
     
             // Update images for rendering
-            regularImage = Functions.Mat2BufferedImage2(regRGB);
-            processedImage = Functions.Mat2BufferedImage2(processedFrame);
+            regularImage = Functions.Mat2BufferedImage(regRGB);             // DO NOT
+            processedImage = Functions.Mat2BufferedImage(processedFrame);   //  CONVERT TO Mat2
     
             // Repaint the panel
             repaint();
