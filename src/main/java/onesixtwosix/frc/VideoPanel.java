@@ -29,11 +29,12 @@ public class VideoPanel extends JPanel implements Runnable {
     private String res;
     private Mat frame = new Mat();
     private int teamNumberFilter; // set to ours as an example
-    public  int threadSleep = 1;
+    public  int threadSleep;
 
-    public VideoPanel(VideoCapture capture, int teamNoFilter) {
+    public VideoPanel(VideoCapture capture, int teamNoFilter, int threadSleep) {
         this.capture = capture;
         this.teamNumberFilter = teamNoFilter;
+        this.threadSleep = threadSleep;
     }
 
     @Override

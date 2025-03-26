@@ -9,10 +9,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
 
 import org.opencv.core.Core;
-import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoCapture; 
 
 import com.formdev.flatlaf.*;
 
@@ -22,6 +23,7 @@ public class App {
     // private static int cameraIndex = 0;
     public static boolean changingCameras = false;
     public static int teamNoFilter = 1626; // ours for testing and example
+    public static int threadSleep = 1;
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -78,12 +80,13 @@ public class App {
         mainFrame.setAlwaysOnTop(false);
         mainFrame.setBackground(Color.DARK_GRAY);
 
+        // Create menuBar
         JMenuBar menuBar = new JMenuBar();
-        JMenu options = new JMenu("Options");
+        JMenu options = new JMenu("Options"); // Options, everything below is self explanatory.
         mainFrame.setJMenuBar(menuBar);
 
         // Options
-        JMenuItem changeTeamFilter = new JMenuItem("Change Team Filter...");
+        JMenuItem changeTeamFilter = new JMenuItem("Change Team Filter");
         changeTeamFilter.addActionListener(e -> {
             try {
                 int newTeamFilter = Integer.parseInt(JOptionPane.showInputDialog(mainFrame, "Insert new team number to look for", teamNoFilter));
@@ -91,10 +94,33 @@ public class App {
             } catch (Exception ex) { ex.printStackTrace(); }
         });
         options.add(changeTeamFilter);
+
+        JMenuItem changeThreadSleep = new JMenuItem("Change Thread Sleep");
+        changeThreadSleep.addActionListener(e -> {
+            try {
+                int newThreadSleep = Integer.parseInt(JOptionPane.showInputDialog(mainFrame, "Insert new thread sleep time ( Milliseconds )\nAFFECTS FPS", threadSleep));
+                threadSleep = newThreadSleep;
+            } catch (Exception ex) { ex.printStackTrace(); }
+        });
+        options.add(changeThreadSleep);
+
+        JRadioButtonMenuItem toggleDbg = new JRadioButtonMenuItem("Toggle Debug Window Visibility");
+        toggleDbg.setSelected(dbgwindow.debugFrame.isVisible());
+        toggleDbg.addActionListener(e -> {
+            try {
+                boolean isVisible = dbgwindow.debugFrame.isVisible();
+                if (isVisible) {
+                    dbgwindow.debugFrame.setVisible(false);
+                } else {
+                    dbgwindow.debugFrame.setVisible(true);
+                }
+            } catch (Exception ex) { ex.printStackTrace(); }
+        });
+        options.add(toggleDbg);
+
         menuBar.add(options);
 
-
-        VideoPanel videoPanel = new VideoPanel(capture, teamNoFilter);
+        VideoPanel videoPanel = new VideoPanel(capture, teamNoFilter, threadSleep); // since i cant access the class, i put the editable vars in the init func.
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         

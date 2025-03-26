@@ -10,7 +10,7 @@ import javax.swing.*;
 
 class debugWindow {
     private static JTextArea debugText;     
-    private static JFrame debugFrame;
+    public  static JFrame debugFrame;
 
     public debugWindow() {
         debugFrame = new JFrame();
