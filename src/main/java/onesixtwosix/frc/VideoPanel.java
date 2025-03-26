@@ -119,14 +119,12 @@ public class VideoPanel extends JPanel implements Runnable {
             Mat maskRed1 = new Mat();
             Mat maskRed2 = new Mat();
             Mat maskBlue = new Mat();
-    
+            Mat maskBlue2 = new Mat();
+            Mat maskBlue3 = new Mat();
+
             Core.inRange(hsv, lowerRed1, upperRed1, maskRed1);
             Core.inRange(hsv, lowerRed2, upperRed2, maskRed2);
             Core.inRange(hsv, lowerBlue, upperBlue, maskBlue);
-    
-            Mat maskBlue2 = new Mat();
-            Mat maskBlue3 = new Mat();
-    
             Core.inRange(hsv, lowerBlue2, upperBlue2, maskBlue2);
             Core.inRange(hsv, lowerBlue3, upperBlue3, maskBlue3);
     
@@ -246,8 +244,8 @@ public class VideoPanel extends JPanel implements Runnable {
 
     
             // Update images for rendering
-            regularImage = Functions.Mat2BufferedImage(regRGB);
-            processedImage = Functions.Mat2BufferedImage(processedFrame);
+            regularImage = Functions.Mat2BufferedImage2(regRGB);
+            processedImage = Functions.Mat2BufferedImage2(processedFrame);
     
             // Repaint the panel
             repaint();

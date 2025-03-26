@@ -1,10 +1,10 @@
 package onesixtwosix.frc;
 
 import java.awt.Image;
-// import java.awt.*;
 import java.awt.image.BufferedImage;
+
 import java.io.File;
-// import javax.swing.*;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,11 +18,10 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import net.sourceforge.tess4j.TessAPI1;
-
-import org.opencv.imgcodecs.Imgcodecs; // For reading images
-import org.opencv.imgproc.Imgproc;
 
 import net.sourceforge.lept4j.*;
 
@@ -139,7 +138,7 @@ public class Functions {
      */
     public class Testing {
         /**
-         * Test OpenCV and Tesseract with a single immage
+         * Test OpenCV and Tesseract with a single image
          * @param imagePath image path
          * @return output.jpg
          */

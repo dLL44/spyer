@@ -15,7 +15,7 @@ import javax.swing.UIManager;
 import org.opencv.core.Core;
 import org.opencv.videoio.VideoCapture; 
 
-import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.FlatDarkLaf;
 
 public class App {
     // Declare globals

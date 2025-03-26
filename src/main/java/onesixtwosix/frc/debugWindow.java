@@ -6,12 +6,16 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.PrintStream;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 
+/** The Debug Window */
 class debugWindow {
     private static JTextArea debugText;     
     public  static JFrame debugFrame;
 
+    /** debugWindow Init */
     public debugWindow() {
         debugFrame = new JFrame();
         debugText = new JTextArea();
