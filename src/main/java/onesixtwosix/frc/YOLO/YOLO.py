@@ -1,3 +1,4 @@
+# youd want to make a venv and install these:
 import cv2
 import sys
 import json
