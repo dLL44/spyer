@@ -32,13 +32,11 @@ public class VideoPanel extends JPanel implements Runnable {
     private Mat frame = new Mat();
     private int teamNumberFilter; // set to ours as an example
     public  int threadSleep;
-    private Dnn dnnModel;
 
     public VideoPanel(VideoCapture capture, int teamNoFilter, int threadSleep) {
         this.capture = capture;
         this.teamNumberFilter = teamNoFilter;
         this.threadSleep = threadSleep;
-        this.dnnModel = new Dnn();
     }
 
     @Override
@@ -256,7 +254,7 @@ public class VideoPanel extends JPanel implements Runnable {
     
             // Delay to control frame rate
             try {
-                Thread.sleep(1); // around 40-50 FPS
+                Thread.sleep(threadSleep); // around 40-50 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

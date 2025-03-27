@@ -1,7 +1,8 @@
 package onesixtwosix.frc;
 
 import java.awt.Color;
-
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -11,11 +12,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
-
-import ai.djl.translate.TranslateException;
-import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.modality.cv.output.DetectedObjects.DetectedObject;
-import ai.djl.ModelException;
 
 import org.opencv.core.Core;
 import org.opencv.videoio.VideoCapture; 
@@ -31,10 +27,18 @@ public class App {
     public static boolean changingCameras = false;
     public static int teamNoFilter = 1626; // ours for testing and example
     public static int threadSleep = 1;
-    private static JSONObject JO = new JSONObject();
+    private static JSONObject JO = new JSONObject();    
+    private static PrintWriter data;
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+        try {
+            data = new PrintWriter(Constants.Filenames.GLOBALDATA);
+        } catch (FileNotFoundException ex) {
+            System.err.println("what the fuck error::file not found. check console for stacktrace");
+            ex.printStackTrace();
+        }
         JO.put("opencv_Java_Version", Core.NATIVE_LIBRARY_NAME);
 
         int cameraIndex = 0;
@@ -57,6 +61,7 @@ public class App {
         List<Integer> cameras = Functions.retrieveCameras();
         System.out.println("\ncameras:");
         System.out.println(cameras);
+        JO.put("cameras_array", cameras);
 
         // If multiple cameras exist, let the user pick one
         if (cameras.size() > 1) {
@@ -75,10 +80,12 @@ public class App {
                 System.err.println("Frame capture failed. (capture not opened)");
                 return;
             }
+            JO.put("active_camera", cameraIndex);
         } catch (IndexOutOfBoundsException e) {
             System.err.println("No Cameras - check if your camera is on.");
             System.err.println("Stack Trace:\n"+e);
         }
+        
 
 
         // Create JFrame with a custom JPanel 

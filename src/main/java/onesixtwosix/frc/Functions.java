@@ -139,7 +139,7 @@ public class Functions {
      * @param Filename filename of file you want to discover
      * @return filepath, if not, "error" or "not found".
      */
-    public String getFilenamePath(String Filename) {
+    public static String getFilenamePath(String Filename) {
         Path start = Paths.get(System.getProperty("user.dir"));
 
         try {
