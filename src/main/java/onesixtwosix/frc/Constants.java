@@ -1,5 +1,7 @@
 package onesixtwosix.frc;
 
+import java.nio.file.*;
+
 /**
  * The name is self explanatory
  */
@@ -13,4 +15,11 @@ public class Constants {
         /** Used for testing values at a -max capacity */
         final static int Logicalivity = -100000000;
     }   
+
+    /** Filenames in String */
+    public static class Filenames {
+        
+
+        
+    }
 }

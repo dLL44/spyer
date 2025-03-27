@@ -18,6 +18,8 @@
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
+<!-- EVERY DEPENDENCY FROM MVNREPOSITORY -->
+
   <dependencies>
     <!-- https://mvnrepository.com/artifact/org.openpnp/opencv -->  
     <!-- https://mvnrepository.com/artifact/org.openpnp/opencv -->
@@ -71,6 +73,13 @@
     <groupId>ai.djl</groupId>
     <artifactId>model-zoo</artifactId>
     <version>0.32.0</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/org.json/json -->
+<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20250107</version>
 </dependency>
 
   </dependencies>

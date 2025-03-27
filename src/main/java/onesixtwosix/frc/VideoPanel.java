@@ -17,6 +17,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.dnn.Dnn;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
@@ -31,11 +32,13 @@ public class VideoPanel extends JPanel implements Runnable {
     private Mat frame = new Mat();
     private int teamNumberFilter; // set to ours as an example
     public  int threadSleep;
+    private Dnn dnnModel;
 
     public VideoPanel(VideoCapture capture, int teamNoFilter, int threadSleep) {
         this.capture = capture;
         this.teamNumberFilter = teamNoFilter;
         this.threadSleep = threadSleep;
+        this.dnnModel = new Dnn();
     }
 
     @Override

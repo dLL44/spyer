@@ -22,6 +22,8 @@ import org.opencv.videoio.VideoCapture;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 
+import org.json.*;
+
 public class App {
     // Declare globals
     public static VideoCapture capture = null;
@@ -29,9 +31,11 @@ public class App {
     public static boolean changingCameras = false;
     public static int teamNoFilter = 1626; // ours for testing and example
     public static int threadSleep = 1;
+    private static JSONObject JO = new JSONObject();
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        JO.put("opencv_Java_Version", Core.NATIVE_LIBRARY_NAME);
 
         int cameraIndex = 0;
         debugWindow dbgwindow = new debugWindow(); // VS Code says its unused, but leave it alone. This is just incase i have to touch the dbgwindow 

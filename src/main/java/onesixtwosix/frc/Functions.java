@@ -2,9 +2,11 @@ package onesixtwosix.frc;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-
+import java.awt.image.RescaleOp;
 import java.io.File;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -132,6 +134,33 @@ public class Functions {
             return null;
         }
     }
+    /**
+     * Find a desired file's path.
+     * @param Filename filename of file you want to discover
+     * @return filepath, if not, "error" or "not found".
+     */
+    public String getFilenamePath(String Filename) {
+        Path start = Paths.get(System.getProperty("user.dir"));
+
+        try {
+            Path res = Files.walk(start, null)
+                .filter(Files::isRegularFile)
+                .filter(path -> path.getFileName().toString().equals(Filename))
+                .findFirst()
+                .orElse(null);
+
+            if (res != null) {
+                System.out.println("found "+Filename+" at "+res.toAbsolutePath());
+                return res.toAbsolutePath().toString();
+            } else {
+                System.out.println("could not find " + Filename);
+                return "not found";
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return "error";
+        }
+    }
  
     /**
      * A class with functions for testing and etc.
@@ -148,6 +177,10 @@ public class Functions {
             if (frame.empty()) {
                 System.out.println("Error: Could not load image.");
                 return;
+            }        try {
+
+            }  catch (Exception ex) {
+                ex.printStackTrace();
             }
         
             // Convert to HSV color space
