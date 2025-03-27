@@ -28,18 +28,19 @@ public class App {
     public static int teamNoFilter = 1626; // ours for testing and example
     public static int threadSleep = 1;
     private static JSONObject JO = new JSONObject();    
-    private static PrintWriter data;
+    private static PrintWriter global_data_json;
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         try {
-            data = new PrintWriter(Constants.Filenames.GLOBALDATA);
+            global_data_json = new PrintWriter(Constants.Filenames.GLOBALDATA);
         } catch (FileNotFoundException ex) {
             System.err.println("what the fuck error::file not found. check console for stacktrace");
             ex.printStackTrace();
         }
         JO.put("opencv_Java_Version", Core.NATIVE_LIBRARY_NAME);
+        JO.put("cameras_Array", Functions.retrieveCameras());
 
         int cameraIndex = 0;
         debugWindow dbgwindow = new debugWindow(); // VS Code says its unused, but leave it alone. This is just incase i have to touch the dbgwindow 
@@ -61,7 +62,6 @@ public class App {
         List<Integer> cameras = Functions.retrieveCameras();
         System.out.println("\ncameras:");
         System.out.println(cameras);
-        JO.put("cameras_array", cameras);
 
         // If multiple cameras exist, let the user pick one
         if (cameras.size() > 1) {
@@ -80,13 +80,18 @@ public class App {
                 System.err.println("Frame capture failed. (capture not opened)");
                 return;
             }
-            JO.put("active_camera", cameraIndex);
+            JO.put("active_Camera", cameraIndex);
         } catch (IndexOutOfBoundsException e) {
             System.err.println("No Cameras - check if your camera is on.");
             System.err.println("Stack Trace:\n"+e);
+            JO.put("active_Camera", "nil");
         }
         
-
+        // send global_data_json to global_data.json
+        global_data_json.write(JO.toString(4));
+        if (global_data_json != null) {
+            global_data_json.close();
+        }
 
         // Create JFrame with a custom JPanel 
         JFrame mainFrame = new JFrame("spyer - camera feed");

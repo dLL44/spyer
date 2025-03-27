@@ -2,8 +2,8 @@ package onesixtwosix.frc;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.RescaleOp;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,21 +11,24 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
+import org.json.JSONObject;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.videoio.VideoCapture;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
 
+import net.sourceforge.lept4j.Leptonica1;
 import net.sourceforge.tess4j.TessAPI1;
-
-import net.sourceforge.lept4j.*;
 
 /**
  * A class of functions used throughout App.java for images, testing, and libraries.
@@ -137,31 +140,21 @@ public class Functions {
     /**
      * Find a desired file's path.
      * @param Filename filename of file you want to discover
-     * @return filepath, if not, "error" or "not found".
+     * @return filepath
      */
     public static String getFilenamePath(String Filename) {
         Path start = Paths.get(System.getProperty("user.dir"));
+        
+        System.out.println("start path " + start);
 
-        try {
-            Path res = Files.walk(start, null)
-                .filter(Files::isRegularFile)
-                .filter(path -> path.getFileName().toString().equals(Filename))
-                .findFirst()
-                .orElse(null);
-
-            if (res != null) {
-                System.out.println("found "+Filename+" at "+res.toAbsolutePath());
-                return res.toAbsolutePath().toString();
-            } else {
-                System.out.println("could not find " + Filename);
-                return "not found";
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return "error";
-        }
+        Optional<Path> result;
+        try (Stream<Path> pathStream = Files.find(start, Integer.MAX_VALUE, (p, basicFileAttributes) -> p.getFileName().toString().equals(Filename) && !p.toString().contains(File.separator + "target" + File.separator))) {
+            result = pathStream.findFirst();
+            System.out.println(pathStream);
+            return result.map(Path::toString).orElse(null);
+        } catch (IOException ex) { ex.printStackTrace(); return null; }
     }
- 
+
     /**
      * A class with functions for testing and etc.
      */
