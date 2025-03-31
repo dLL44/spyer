@@ -18,6 +18,8 @@ import org.opencv.videoio.VideoCapture;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 
+import onesixtwosix.frc.YOLO.YOLO;
+
 import org.json.*;
 
 public class App {
@@ -29,6 +31,7 @@ public class App {
     public static int threadSleep = 1;
     private static JSONObject JO = new JSONObject();    
     private static PrintWriter global_data_json;
+    private static YOLO yolo;
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -86,6 +89,7 @@ public class App {
             System.err.println("Stack Trace:\n"+e);
             JO.put("active_Camera", "nil");
         }
+        yolo = new YOLO(capture);
         
         // send global_data_json to global_data.json
         global_data_json.write(JO.toString(4));
@@ -141,7 +145,7 @@ public class App {
 
         menuBar.add(options);
 
-        VideoPanel videoPanel = new VideoPanel(capture, teamNoFilter, threadSleep); // since i cant access the class, i put the editable vars in the init func.
+        VideoPanel videoPanel = new VideoPanel(capture, teamNoFilter, threadSleep, yolo); // since i cant access the class, i put the editable vars in the init func.
         mainFrame.add(videoPanel);
         mainFrame.setVisible(true);
         

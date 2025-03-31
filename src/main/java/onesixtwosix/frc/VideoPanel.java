@@ -22,6 +22,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
 import net.sourceforge.tess4j.*;
+import onesixtwosix.frc.YOLO.YOLO;
 
 // Custom JPanel for displaying camera feeds
 public class VideoPanel extends JPanel implements Runnable {
@@ -32,11 +33,13 @@ public class VideoPanel extends JPanel implements Runnable {
     private Mat frame = new Mat();
     private int teamNumberFilter; // set to ours as an example
     public  int threadSleep;
+    private YOLO yoloObject;
 
-    public VideoPanel(VideoCapture capture, int teamNoFilter, int threadSleep) {
+    public VideoPanel(VideoCapture capture, int teamNoFilter, int threadSleep, YOLO yoloObj) {
         this.capture = capture;
         this.teamNumberFilter = teamNoFilter;
         this.threadSleep = threadSleep;
+        this.yoloObject = yoloObj;
     }
 
     @Override
@@ -251,6 +254,7 @@ public class VideoPanel extends JPanel implements Runnable {
     
             // Repaint the panel
             repaint();
+            yoloObject.detectAndDisplay();
     
             // Delay to control frame rate
             try {
