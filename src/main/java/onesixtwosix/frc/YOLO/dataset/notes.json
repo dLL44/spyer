@@ -1,0 +1,45 @@
+{
+  "categories": [
+    {
+      "id": 0,
+      "name": "algae"
+    },
+    {
+      "id": 1,
+      "name": "barge"
+    },
+    {
+      "id": 2,
+      "name": "cage_dh"
+    },
+    {
+      "id": 3,
+      "name": "cage_sh"
+    },
+    {
+      "id": 4,
+      "name": "coral"
+    },
+    {
+      "id": 5,
+      "name": "game_piece"
+    },
+    {
+      "id": 6,
+      "name": "processor"
+    },
+    {
+      "id": 7,
+      "name": "reef"
+    },
+    {
+      "id": 8,
+      "name": "robot"
+    }
+  ],
+  "info": {
+    "year": 2025,
+    "version": "1.0",
+    "contributor": "Label Studio"
+  }
+}

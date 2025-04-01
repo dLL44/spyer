@@ -1,0 +1,13 @@
+train: ./images/train
+val: ./images/val
+nc: 9
+names: ["algae",
+"barge",
+"cage_dh",
+"cage_sh",
+"coral",
+"game_piece",
+"processor",
+"reef",
+"robot"
+]
